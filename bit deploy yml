@@ -2,9 +2,6 @@ pipelines:
   branch:
     develop:
       variables:
-        ENV: dev
-        SERVICE_NAME: cron
-        SERVICE_NAMEM: Cron
       - step:
           name: Build DEV Image
           image: docker:20.10.9
@@ -41,86 +38,80 @@ pipelines:
                 TASK_DEFINITION: sam-$ENV-td-$SERVICE_NAME.json
                 IMAGE_NAME: $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME
                 IMAGE_TAG: $BITBUCKET_COMMIT
-  qa:
-    variables:
-      ENV: qa
-      SERVICE_NAME: cron
-      SERVICE_NAMEM: Cron
-    - step:
-        name: Build QA Image
-        image: docker:20.10.9
-        services:
-          - docker:20.10.9-dind
-        script:
-          - export ENV=qa
-          - docker build -t sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT .
-          - docker tag sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT
-          - docker login -u $AWS_ACCESS_KEY_ID -p $AWS_SECRET_ACCESS_KEY $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
-          - docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT
-    - step:
-        name: Update Task Definition
-        image: alpine
-        script:
-          - export IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT
-          - export TD_FILE=sam-$ENV-td-$SERVICE_NAME.json
-          - sed -i 's#\(.*\)IMAGE_NAME\(.*\)#\1'$IMAGE_URI'\2#g' $TD_FILE
-          - cat $TD_FILE
-        artifacts:
-          - sam-$ENV-td-$SERVICE_NAME.json
-    - step:
-        name: Deploy QA
-        script:
-          - pipe: atlassian/aws-ecs-deploy:1.7.0
-            variables:
-              AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID_AB
-              AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY_AB
-              AWS_DEFAULT_REGION: us-east-1
-              COMMAND: deploy
-              SERVICE: sam-$ENV-ECSservice$SERVICE_NAMEM
-              CLUSTER: sam-$ENV-cluster
-              CONTAINER: sam-$ENV-container$SERVICE_NAMEM
-              TASK_DEFINITION: sam-$ENV-td-$SERVICE_NAME.json
-              IMAGE_NAME: $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME
-              IMAGE_TAG: $BITBUCKET_COMMIT
-
-  uat:
-    variables:
-      ENV: uat
-      SERVICE_NAME: cron
-      SERVICE_NAMEM: Cron
-    - step:
-        name: Build UAT Image
-        image: docker:20.10.9
-        services:
-          - docker:20.10.9-dind
-        script:
-          - export ENV=uat
-          - docker build -t sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT .
-          - docker tag sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT
-          - docker login -u $AWS_ACCESS_KEY_ID -p $AWS_SECRET_ACCESS_KEY $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
-          - docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT
-    - step:
-        name: Update Task Definition
-        image: alpine
-        script:
-          - export IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT
-          - export TD_FILE=sam-$ENV-td-$SERVICE_NAME.json
-          - sed -i 's#\(.*\)IMAGE_NAME\(.*\)#\1'$IMAGE_URI'\2#g' $TD_FILE
-          - cat $TD_FILE
-        artifacts:
-          - sam-$ENV-td-$SERVICE_NAME.json
-    - step:
-        name: Deploy UAT
-        script:
-          - pipe: atlassian/aws-ecs-deploy:1.7.0
-            variables:
-              AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID_AB
-              AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY_AB
-              AWS_DEFAULT_REGION: us-east-1
-              COMMAND: deploy
-              SERVICE: sam-$ENV-ECSservice$SERVICE_NAMEM
-              CLUSTER: sam-$ENV-cluster
-              CONTAINER: sam-$ENV-container$SERVICE_NAMEM
-              TASK_DEFINITION: sam-$ENV-td-$SERVICE_NAME.json
-              IMAGE_NAME: $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME
-              IMAGE_TAG: $BITBUCKET_COMMIT
+    qa:
+      variables:
+      - step:
+          name: Build QA Image
+          image: docker:20.10.9
+          services:
+            - docker:20.10.9-dind
+          script:
+            - export ENV=qa
+            - docker build -t sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT .
+            - docker tag sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT
+            - docker login -u $AWS_ACCESS_KEY_ID -p $AWS_SECRET_ACCESS_KEY $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
+            - docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT
+      - step:
+          name: Update Task Definition
+          image: alpine
+          script:
+            - export IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT
+            - export TD_FILE=sam-$ENV-td-$SERVICE_NAME.json
+            - sed -i 's#\(.*\)IMAGE_NAME\(.*\)#\1'$IMAGE_URI'\2#g' $TD_FILE
+            - cat $TD_FILE
+          artifacts:
+            - sam-$ENV-td-$SERVICE_NAME.json
+      - step:
+          name: Deploy QA
+          script:
+            - pipe: atlassian/aws-ecs-deploy:1.7.0
+              variables:
+                AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID_AB
+                AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY_AB
+                AWS_DEFAULT_REGION: us-east-1
+                COMMAND: deploy
+                SERVICE: sam-$ENV-ECSservice$SERVICE_NAMEM
+                CLUSTER: sam-$ENV-cluster
+                CONTAINER: sam-$ENV-container$SERVICE_NAMEM
+                TASK_DEFINITION: sam-$ENV-td-$SERVICE_NAME.json
+                IMAGE_NAME: $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME
+                IMAGE_TAG: $BITBUCKET_COMMIT
+  
+    uat:
+      variables:
+      - step:
+          name: Build UAT Image
+          image: docker:20.10.9
+          services:
+            - docker:20.10.9-dind
+          script:
+            - export ENV=uat
+            - docker build -t sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT .
+            - docker tag sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT
+            - docker login -u $AWS_ACCESS_KEY_ID -p $AWS_SECRET_ACCESS_KEY $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
+            - docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT
+      - step:
+          name: Update Task Definition
+          image: alpine
+          script:
+            - export IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME:$BITBUCKET_COMMIT
+            - export TD_FILE=sam-$ENV-td-$SERVICE_NAME.json
+            - sed -i 's#\(.*\)IMAGE_NAME\(.*\)#\1'$IMAGE_URI'\2#g' $TD_FILE
+            - cat $TD_FILE
+          artifacts:
+            - sam-$ENV-td-$SERVICE_NAME.json
+      - step:
+          name: Deploy UAT
+          script:
+            - pipe: atlassian/aws-ecs-deploy:1.7.0
+              variables:
+                AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID_AB
+                AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY_AB
+                AWS_DEFAULT_REGION: us-east-1
+                COMMAND: deploy
+                SERVICE: sam-$ENV-ECSservice$SERVICE_NAMEM
+                CLUSTER: sam-$ENV-cluster
+                CONTAINER: sam-$ENV-container$SERVICE_NAMEM
+                TASK_DEFINITION: sam-$ENV-td-$SERVICE_NAME.json
+                IMAGE_NAME: $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sam-$ENV-ecr-$SERVICE_NAME
+                IMAGE_TAG: $BITBUCKET_COMMIT
